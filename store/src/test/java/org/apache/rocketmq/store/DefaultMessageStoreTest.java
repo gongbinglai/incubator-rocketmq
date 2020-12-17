@@ -133,6 +133,15 @@ public class DefaultMessageStoreTest {
         }
         verifyThatMasterIsFunctional(totalMsgs, messageStore);
     }
+    @Test
+    public void testPutMessage() {
+        long totalMsgs = 10;
+        QUEUE_TOTAL = 1;
+        MessageBody = StoreMessage.getBytes();
+
+        messageStore.putMessage(buildMessage());
+        System.out.println("dddddddddddd");
+    }
 
     @Test
     public void should_look_message_successfully_when_offset_is_first() {
