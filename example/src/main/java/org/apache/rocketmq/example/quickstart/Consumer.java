@@ -48,7 +48,7 @@ public class Consumer {
          * }
          * </pre>
          */
-        consumer.setNamesrvAddr("82.157.167.56:9876");
+        consumer.setNamesrvAddr("VM-24-9-centos:9876");
 
         /*
          * Specify where to start in case the specified consumer group is a brand new one.
@@ -70,7 +70,7 @@ public class Consumer {
                 ConsumeConcurrentlyContext context) {
                 /**
                  * [queueId=2, storeSize=180, queueOffset=486, sysFlag=0, bornTimestamp=1638243735920, bornHost=/10.0.24.9:50398,
-                 * storeTimestamp=1638243735920, storeHost=/172.17.0.1:10911,
+                 * storeTimestamp=1638243735920, storeHost=/172.17.x.1:10911,
                  * msgId=AC11000100002A9F0000000000055604, commitLogOffset=349700,
                  * bodyCRC=1830206955, reconsumeTimes=0, preparedTransactionOffset=0, toString()=
                  * Message{topic='TopicTest', flag=0, properties={MIN_OFFSET=0, MAX_OFFSET=500, CONSUME_START_TIME=1638434532040, UNIQ_KEY=AC110001A16B3CD1A2F197DB5D7003B0, WAIT=true, TAGS=TagA},

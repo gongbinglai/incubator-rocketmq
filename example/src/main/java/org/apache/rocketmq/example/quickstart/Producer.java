@@ -44,7 +44,7 @@ public class Producer {
          * }
          * </pre>
          */
-        producer.setNamesrvAddr("82.157.167.56:9876");
+        producer.setNamesrvAddr("VM-24-9-centos:9876");
         producer.setSendMsgTimeout(3000*10);
         /*
          * Launch the instance.
