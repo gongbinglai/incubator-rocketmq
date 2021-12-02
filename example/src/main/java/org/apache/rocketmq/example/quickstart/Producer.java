@@ -31,7 +31,7 @@ public class Producer {
         /*
          * Instantiate with a producer group name.
          */
-        DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
+        DefaultMQProducer producer = new DefaultMQProducer("HelloRocketMQGroup");
 
         /*
          * Specify name server addresses.
@@ -44,13 +44,14 @@ public class Producer {
          * }
          * </pre>
          */
-
+        producer.setNamesrvAddr("82.157.167.56:9876");
+        producer.setSendMsgTimeout(3000*10);
         /*
          * Launch the instance.
          */
         producer.start();
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 5; i++) {
             try {
 
                 /*
@@ -66,6 +67,9 @@ public class Producer {
                  */
                 SendResult sendResult = producer.send(msg);
 
+                /**
+                 * SendResult [sendStatus=SEND_OK, msgId=0A0066EA321418B4AAC208B45B310000, offsetMsgId=529DA73800002A9F0000000000057D64, messageQueue=MessageQueue [topic=TopicTest, brokerName=broker-a, queueId=1], queueOffset=500]
+                 */
                 System.out.printf("%s%n", sendResult);
             } catch (Exception e) {
                 e.printStackTrace();

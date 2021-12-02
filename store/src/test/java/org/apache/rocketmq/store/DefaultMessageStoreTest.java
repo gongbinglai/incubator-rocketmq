@@ -96,12 +96,12 @@ public class DefaultMessageStoreTest {
 
     @After
     public void destroy() {
-        messageStore.shutdown();
-        messageStore.destroy();
-
-        MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
-        File file = new File(messageStoreConfig.getStorePathRootDir());
-        UtilAll.deleteFile(file);
+//        messageStore.shutdown();
+//        messageStore.destroy();
+//
+//        MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
+//        File file = new File(messageStoreConfig.getStorePathRootDir());
+//        UtilAll.deleteFile(file);
     }
 
     private MessageStore buildMessageStore() throws Exception {
@@ -420,6 +420,7 @@ public class DefaultMessageStoreTest {
         msg.setKeys("Hello");
         msg.setBody(messageBody);
         msg.setKeys(String.valueOf(System.currentTimeMillis()));
+        //设置消息对应的队列queueId
         msg.setQueueId(Math.abs(QueueId.getAndIncrement()) % QUEUE_TOTAL);
         msg.setSysFlag(0);
         msg.setBornTimestamp(System.currentTimeMillis());
