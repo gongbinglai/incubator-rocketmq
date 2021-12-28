@@ -366,7 +366,7 @@ public class DefaultMessageStore implements MessageStore {
 
             return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);
         }
-
+        //判断broker是否允许写消息
         if (!this.runningFlags.isWriteable()) {
             long value = this.printTimes.getAndIncrement();
             if ((value % 50000) == 0) {
@@ -1483,6 +1483,7 @@ public class DefaultMessageStore implements MessageStore {
     class CommitLogDispatcherBuildConsumeQueue implements CommitLogDispatcher {
 
         @Override
+        //构建ConsumeQueue
         public void dispatch(DispatchRequest request) {
             final int tranType = MessageSysFlag.getTransactionValue(request.getSysFlag());
             switch (tranType) {
@@ -1500,6 +1501,7 @@ public class DefaultMessageStore implements MessageStore {
     class CommitLogDispatcherBuildIndex implements CommitLogDispatcher {
 
         @Override
+        //构建index
         public void dispatch(DispatchRequest request) {
             if (DefaultMessageStore.this.messageStoreConfig.isMessageIndexEnable()) {
                 DefaultMessageStore.this.indexService.buildIndex(request);
