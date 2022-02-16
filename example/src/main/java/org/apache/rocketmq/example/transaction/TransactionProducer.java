@@ -31,6 +31,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class TransactionProducer {
+    /**
+     * 事务消息
+     * @param args
+     * @throws MQClientException
+     * @throws InterruptedException
+     */
     public static void main(String[] args) throws MQClientException, InterruptedException {
         TransactionListener transactionListener = new TransactionListenerImpl();
         TransactionMQProducer producer = new TransactionMQProducer("please_rename_unique_group_name");
@@ -53,6 +59,7 @@ public class TransactionProducer {
                 Message msg =
                     new Message("TopicTest1234", tags[i % tags.length], "KEY" + i,
                         ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET));
+                //发送事务消息
                 SendResult sendResult = producer.sendMessageInTransaction(msg, null);
                 System.out.printf("%s%n", sendResult);
 

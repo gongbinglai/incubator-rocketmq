@@ -24,12 +24,16 @@ import org.apache.rocketmq.common.message.MessageExt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 public class TransactionListenerImpl implements TransactionListener {
     private AtomicInteger transactionIndex = new AtomicInteger(0);
 
     private ConcurrentHashMap<String, Integer> localTrans = new ConcurrentHashMap<>();
 
     @Override
+    /**
+     * 执行本地事务
+     */
     public LocalTransactionState executeLocalTransaction(Message msg, Object arg) {
         int value = transactionIndex.getAndIncrement();
         int status = value % 3;
@@ -38,6 +42,10 @@ public class TransactionListenerImpl implements TransactionListener {
     }
 
     @Override
+    /**
+     * 当producer 发送给Broker commit/rollback失败时，broker会通过判断checkLocalTransaction来决定
+     * 是commit还是rollback事务
+     */
     public LocalTransactionState checkLocalTransaction(MessageExt msg) {
         Integer status = localTrans.get(msg.getTransactionId());
         if (null != status) {
