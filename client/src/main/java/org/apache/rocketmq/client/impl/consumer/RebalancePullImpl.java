@@ -74,6 +74,7 @@ public class RebalancePullImpl extends RebalanceImpl {
     }
 
     @Override
+    //在这返回了空的PullRequest，所以DefultMQPullConsumerImpl即使创建了RebalanceService和PullMessageService也不起作用
     public void dispatchPullRequest(List<PullRequest> pullRequestList) {
     }
 }

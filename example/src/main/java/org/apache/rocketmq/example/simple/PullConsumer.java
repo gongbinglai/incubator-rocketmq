@@ -32,6 +32,9 @@ public class PullConsumer {
         consumer.setNamesrvAddr("127.0.0.1:9876");
         consumer.start();
 
+        /**
+         * 消息拉模式：consumer自己控制消息的消费
+         */
         Set<MessageQueue> mqs = consumer.fetchSubscribeMessageQueues("broker-a");
         for (MessageQueue mq : mqs) {
             System.out.printf("Consume from the queue: %s%n", mq);

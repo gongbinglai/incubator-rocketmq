@@ -539,6 +539,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             String[] brokersSent = new String[timesTotal];
             //重试次数，默认3次
             for (; times < timesTotal; times++) {
+                //上一次选择的brokerName
                 String lastBrokerName = null == mq ? null : mq.getBrokerName();
                 //选择一个消息队列去发送
                 MessageQueue mqSelected = this.selectOneMessageQueue(topicPublishInfo, lastBrokerName);

@@ -229,6 +229,7 @@ public class PullMessageProcessor implements NettyRequestProcessor {
             messageFilter = new ExpressionForRetryMessageFilter(subscriptionData, consumerFilterData,
                 this.brokerController.getConsumerFilterManager());
         } else {
+            //创建Express表达式过滤器
             messageFilter = new ExpressionMessageFilter(subscriptionData, consumerFilterData,
                 this.brokerController.getConsumerFilterManager());
         }
@@ -405,6 +406,19 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                     break;
                 case ResponseCode.PULL_NOT_FOUND:
 
+                    /**
+                     * 在broker消息服务端根据拉取偏移量去物理文件查找消息时没有找到，
+                     * 并不立即返回消息未找到，而是会将该线程挂起一段时间，然后再次重试，直到重试。
+                     * 挂起分为长轮询或短轮询，在broker 端可以通过 longPollingEnable=true 来开启长轮询。
+                     *
+                     *长轮询：longPollingEnable=true，会根据消费者端设置的挂起超时时间，受DefaultMQPullConsumer 的brokerSuspendMaxTimeMillis控制，默认20s,（brokerSuspendMaxTimeMillis），长轮询有两个线程来相互实现。
+                     *
+                     * PullRequestHoldService：每隔5s重试一次。
+                     * DefaultMessageStore#ReputMessageService，每当有消息到达后，转发消息，然后调用PullRequestHoldService 线程中的拉取任务，尝试拉取，每处理一次，Thread.sleep(1), 继续下一次检查。
+                     *
+                     * 短轮询：
+                     * longPollingEnable=false，第一次未拉取到消息后等待 shortPollingTimeMills时间后再试。shortPollingTimeMills默认为1S。
+                     */
                     if (brokerAllowSuspend && hasSuspendFlag) {
                         long pollingTimeMills = suspendTimeoutMillisLong;
                         if (!this.brokerController.getBrokerConfig().isLongPollingEnable()) {
@@ -416,7 +430,9 @@ public class PullMessageProcessor implements NettyRequestProcessor {
                         int queueId = requestHeader.getQueueId();
                         PullRequest pullRequest = new PullRequest(request, channel, pollingTimeMills,
                             this.brokerController.getMessageStore().now(), offset, subscriptionData, messageFilter);
+                        //创建 PullRequest, 然后提交给 PullRequestHoldService 线程去调度，触发消息拉取
                         this.brokerController.getPullRequestHoldService().suspendPullRequest(topic, queueId, pullRequest);
+                        //设置response=null，则此时此次调用不会向客户端输出任何字节，客户端网络请求客户端的读事件不会触发，不会触发对响应结果的处理，处于等待状态
                         response = null;
                         break;
                     }

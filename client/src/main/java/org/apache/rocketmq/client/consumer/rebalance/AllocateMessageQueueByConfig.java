@@ -20,6 +20,11 @@ import java.util.List;
 import org.apache.rocketmq.client.consumer.AllocateMessageQueueStrategy;
 import org.apache.rocketmq.common.message.MessageQueue;
 
+/**
+ * 用户自定义配置，用户在创建Consumer的时候，可以设置要使用的负载策略，如果我们设置为AllocateMessageQueueByConfig方式时，
+ * 我们可以自己指定需要监听的MessageQueues，它维护了一个List messageQueueList，我们可以往这里面塞目标的MessageQueues，
+ * 这个策略了解一下就行，用的不多
+ */
 public class AllocateMessageQueueByConfig implements AllocateMessageQueueStrategy {
     private List<MessageQueue> messageQueueList;
 

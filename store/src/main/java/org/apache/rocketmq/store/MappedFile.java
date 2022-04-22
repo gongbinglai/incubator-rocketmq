@@ -58,6 +58,7 @@ public class MappedFile extends ReferenceResource {
      * Message will put to here first, and then reput to FileChannel if writeBuffer is not null.
      */
     protected ByteBuffer writeBuffer = null;
+    //堆外内存
     protected TransientStorePool transientStorePool = null;
     private String fileName;
     private long fileFromOffset;
@@ -325,8 +326,11 @@ public class MappedFile extends ReferenceResource {
 
         if (writePos - this.committedPosition.get() > 0) {
             try {
+                //创建一个新的字节缓冲区，其内容是此缓冲区内容的共享子序列。
                 ByteBuffer byteBuffer = writeBuffer.slice();
+                //设置这个缓冲区的位置。
                 byteBuffer.position(lastCommittedPosition);
+                //设置此缓冲区的限制。
                 byteBuffer.limit(writePos);
                 this.fileChannel.position(lastCommittedPosition);
                 this.fileChannel.write(byteBuffer);

@@ -237,7 +237,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         } catch (Exception e) {
             log.error("Failed to produce a proper response", e);
         }
-
+        // TopicConfig的创建配置
         TopicConfig topicConfig = new TopicConfig(requestHeader.getTopic());
         topicConfig.setReadQueueNums(requestHeader.getReadQueueNums());
         topicConfig.setWriteQueueNums(requestHeader.getWriteQueueNums());
@@ -245,8 +245,20 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         topicConfig.setPerm(requestHeader.getPerm());
         topicConfig.setTopicSysFlag(requestHeader.getTopicSysFlag() == null ? 0 : requestHeader.getTopicSysFlag());
 
+        // broker保存Topic的配置信息
+        /**
+         * "PushTopic":{
+         * "order":false,
+         * "perm":6,
+         * "readQueueNums":4,
+         * "topicFilterType":"SINGLE_TAG",
+         * "topicName":"PushTopic",
+         * "topicSysFlag":0,
+         * "writeQueueNums":4
+         * },
+         */
         this.brokerController.getTopicConfigManager().updateTopicConfig(topicConfig);
-
+        // broker负责向namesrv上报topic信息。
         this.brokerController.registerIncrementBrokerData(topicConfig,this.brokerController.getTopicConfigManager().getDataVersion());
 
         return null;

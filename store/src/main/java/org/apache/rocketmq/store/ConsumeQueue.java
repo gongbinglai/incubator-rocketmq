@@ -485,10 +485,12 @@ public class ConsumeQueue {
 
     public SelectMappedBufferResult getIndexBuffer(final long startIndex) {
         int mappedFileSize = this.mappedFileSize;
-        long offset = startIndex * CQ_STORE_UNIT_SIZE;
+        long offset = startIndex * CQ_STORE_UNIT_SIZE; //获取在ConsumeQueue文件中的物理偏移量
         if (offset >= this.getMinLogicOffset()) {
+            //根据offset找到ConsumeQueue对应的MappedFile
             MappedFile mappedFile = this.mappedFileQueue.findMappedFileByOffset(offset);
             if (mappedFile != null) {
+                //从MappedFile中读取ConsumeQueue内容
                 SelectMappedBufferResult result = mappedFile.selectMappedBuffer((int) (offset % mappedFileSize));
                 return result;
             }

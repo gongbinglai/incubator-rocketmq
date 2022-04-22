@@ -24,6 +24,7 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 
 /**
  * This example shows how to subscribe and consume messages using providing {@link DefaultMQPushConsumer}.
@@ -34,8 +35,14 @@ public class Consumer {
 
         /*
          * Instantiate with specified consumer group name.
+         *
+         * 1、DefaultMQPushConsumer：消息发送者将消息发送到Broker，然后Broker主动推送给订阅了该消息的消费者
+         *  RocketMQ 推拉机制实现：严格意义上来讲，RocketMQ 并没有实现 PUSH 模式，而是对拉模式进行一层包装，在消费端开启一个线程 PullMessageService 循环向 Broke r拉取消息，一次拉取任务结束后马上又发起另一次拉取操作，实现准实时自动拉取
+         *
+         * 2、DefaultMQPushConsumer：消息发送者将消息发送到Broker，然后由消息消费者自发的向Broker拉取消息。
+         *
          */
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("please_rename_unique_group_name_4");
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("rmq");
 
         /*
          * Specify name server addresses.
@@ -52,13 +59,25 @@ public class Consumer {
         consumer.setNamesrvAddr("127.0.0.1:9876");
         /*
          * Specify where to start in case the specified consumer group is a brand new one.
+         *
+         * CONSUME_FROM_FIRST_OFFSET  从头开始消费消息
+         * CONSUME_FROM_LAST_OFFSET 从上一次消费offset开始消费
+         * CONSUME_FROM_TIMESTAMP 从某个时间点开始消费
          */
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
+        //消费最小线程、最大线程
+        consumer.setConsumeThreadMin(10);
+        consumer.setConsumeThreadMax(10);
+        //超时时间
+        consumer.setConsumeTimeout(1000);
+        consumer.setConsumeMessageBatchMaxSize(10);
         /*
          * Subscribe one more more topics to consume.
          */
         consumer.subscribe("TopicTest", "*");
+        //消息模式：集群，广播
+        consumer.setMessageModel(MessageModel.CLUSTERING);
 
         /*
          *  Register callback to execute on arrival of messages fetched from brokers.
@@ -77,7 +96,8 @@ public class Consumer {
                  * body=[72, 101, 108, 108, 111, 32, 82, 111, 99, 107, 101, 116, 77, 81, 32, 57, 52, 52], transactionId='null'}]
                  */
                 System.out.printf("%s Receive New Messages: %s %n", Thread.currentThread().getName(), msgs);
-                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+                //return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+                return ConsumeConcurrentlyStatus.RECONSUME_LATER;
             }
         });
 

@@ -323,6 +323,7 @@ public class TopicConfigManager extends ConfigManager {
 
         this.dataVersion.nextVersion();
 
+        //持久化，将内容写入到topicConfig.json文件中
         this.persist();
     }
 

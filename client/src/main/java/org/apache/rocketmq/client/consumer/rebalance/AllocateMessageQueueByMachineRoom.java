@@ -24,6 +24,8 @@ import org.apache.rocketmq.common.message.MessageQueue;
 
 /**
  * Computer room Hashing queue algorithm, such as Alipay logic room
+ * 机房负载策略，其实这个策略就是当前Consumer只负载处在指定的机房内的MessageQueue，还有brokerName的命名必须要按要求的格式来设置： 机房名@brokerName
+ *
  */
 public class AllocateMessageQueueByMachineRoom implements AllocateMessageQueueStrategy {
     private Set<String> consumeridcs;

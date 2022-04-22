@@ -106,6 +106,7 @@ public class HAService {
     // }
 
     public void start() throws Exception {
+        //创建连接
         this.acceptSocketService.beginAccept();
         this.acceptSocketService.start();
         this.groupTransferService.start();
@@ -559,6 +560,7 @@ public class HAService {
 
                         this.selector.select(1000);
 
+                        //处理网络读请求，也就是处理从Master传回的消息数据
                         boolean ok = this.processReadEvent();
                         if (!ok) {
                             this.closeMaster();

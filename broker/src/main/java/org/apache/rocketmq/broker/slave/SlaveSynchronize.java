@@ -46,6 +46,7 @@ public class SlaveSynchronize {
     }
 
     public void syncAll() {
+        //同步TopicConfig
         this.syncTopicConfig();
         this.syncConsumerOffset();
         this.syncDelayOffset();
@@ -56,6 +57,7 @@ public class SlaveSynchronize {
         String masterAddrBak = this.masterAddr;
         if (masterAddrBak != null && !masterAddrBak.equals(brokerController.getBrokerAddr())) {
             try {
+                //从Master获取TopicConfig信息
                 TopicConfigSerializeWrapper topicWrapper =
                     this.brokerController.getBrokerOuterAPI().getAllTopicConfig(masterAddrBak);
                 if (!this.brokerController.getTopicConfigManager().getDataVersion()

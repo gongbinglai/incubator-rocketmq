@@ -237,4 +237,12 @@ public class MQClientAPIImplTest {
         requestHeader.setMaxReconsumeTimes(10);
         return requestHeader;
     }
+
+
+    @Test
+    public void createTopic() throws RemotingException, InterruptedException, MQBrokerException {
+
+//      mqClientAPI.createTopic();
+
+    }
 }

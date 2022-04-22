@@ -128,10 +128,13 @@ public class MQClientInstance {
     public MQClientInstance(ClientConfig clientConfig, int instanceIndex, String clientId, RPCHook rpcHook) {
         this.clientConfig = clientConfig;
         this.instanceIndex = instanceIndex;
+        //netty通信config
         this.nettyClientConfig = new NettyClientConfig();
         this.nettyClientConfig.setClientCallbackExecutorThreads(clientConfig.getClientCallbackExecutorThreads());
         this.nettyClientConfig.setUseTLS(clientConfig.isUseTLS());
         this.clientRemotingProcessor = new ClientRemotingProcessor(this);
+
+        //MQ 客户端实现类
         this.mQClientAPIImpl = new MQClientAPIImpl(this.nettyClientConfig, this.clientRemotingProcessor, rpcHook, clientConfig);
 
         if (this.clientConfig.getNamesrvAddr() != null) {
@@ -140,11 +143,12 @@ public class MQClientInstance {
         }
 
         this.clientId = clientId;
-
+        //MQ 管理命令实现类。
         this.mQAdminImpl = new MQAdminImpl(this);
 
+       //消息拉取线程，一个MQClientInstance 只会启动一个消息拉取线程。
         this.pullMessageService = new PullMessageService(this);
-
+        //consume端负载均衡
         this.rebalanceService = new RebalanceService(this);
 
         this.defaultMQProducer = new DefaultMQProducer(MixAll.CLIENT_INNER_PRODUCER_GROUP);
@@ -237,9 +241,9 @@ public class MQClientInstance {
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
                     this.startScheduledTask();
-                    // Start pull service
+                    // Start pull service  根据PullRequest拉取消息
                     this.pullMessageService.start();
-                    // Start rebalance service
+                    // Start rebalance service   负载均衡，生成PullRequest
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -303,6 +307,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    //持久化consumer offset，每5s执行一次
                     MQClientInstance.this.persistAllConsumerOffset();
                 } catch (Exception e) {
                     log.error("ScheduledTask persistAllConsumerOffset exception", e);
@@ -1028,6 +1033,7 @@ public class MQClientInstance {
     public String findBrokerAddressInPublish(final String brokerName) {
         HashMap<Long/* brokerId */, String/* address */> map = this.brokerAddrTable.get(brokerName);
         if (map != null && !map.isEmpty()) {
+            //获取主Broker，这也就是为什么主Broker id需要配置为0的原因
             return map.get(MixAll.MASTER_ID);
         }
 

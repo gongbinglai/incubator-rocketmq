@@ -140,7 +140,7 @@ public class ConsumerOffsetManager extends ConfigManager {
     }
 
     public long queryOffset(final String group, final String topic, final int queueId) {
-        // topic@group
+        // topic@group   /rocketmq_home/store/config/consumerOffset.json
         String key = topic + TOPIC_GROUP_SEPARATOR + group;
         ConcurrentMap<Integer, Long> map = this.offsetTable.get(key);
         if (null != map) {

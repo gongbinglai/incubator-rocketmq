@@ -30,6 +30,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 
+/**
+ * 同机房优先分配策略
+ */
 public class AllocateMachineRoomNearByTest {
 
     private static final String CID_PREFIX = "CID-";

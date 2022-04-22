@@ -196,17 +196,22 @@ public class MappedFileQueue {
         long createOffset = -1;
         MappedFile mappedFileLast = getLastMappedFile();
 
+        //如果MappedFile一个都不存在的话，那么createOffset从0开始
         if (mappedFileLast == null) {
             createOffset = startOffset - (startOffset % this.mappedFileSize);
         }
 
+        //如果上一个MappedFile存在，那么新创建的MappedFile的offset = mappedFileLast.getFileFromOffset() + this.mappedFileSize;
         if (mappedFileLast != null && mappedFileLast.isFull()) {
             createOffset = mappedFileLast.getFileFromOffset() + this.mappedFileSize;
         }
 
         if (createOffset != -1 && needCreate) {
-            //创建映射文件
+            /**
+             * 创建映射文件，创建的映射文件的名称：00000000000000000000，00000000001073741824
+             */
             String nextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset);
+            //下下个MappedFile名称
             String nextNextFilePath = this.storePath + File.separator
                 + UtilAll.offset2FileName(createOffset + this.mappedFileSize);
             MappedFile mappedFile = null;
@@ -478,6 +483,11 @@ public class MappedFileQueue {
                         this.mappedFileSize,
                         this.mappedFiles.size());
                 } else {
+                    /**
+                     * 因为文件会存在删除的情况，所以需要通过(offset / this.mappedFileSize) - (firstMappedFile.getFileFromOffset() / this.mappedFileSize)
+                     * 来计算MappedFile的Index
+                     */
+
                     int index = (int) ((offset / this.mappedFileSize) - (firstMappedFile.getFileFromOffset() / this.mappedFileSize));
                     MappedFile targetFile = null;
                     try {
