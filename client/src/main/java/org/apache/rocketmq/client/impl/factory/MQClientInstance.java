@@ -478,7 +478,9 @@ public class MQClientInstance {
     public void sendHeartbeatToAllBrokerWithLock() {
         if (this.lockHeartbeat.tryLock()) {
             try {
+                //consumer 发送心跳到Broker
                 this.sendHeartbeatToAllBroker();
+                //上传filter class代码到filter server
                 this.uploadFilterClassSource();
             } catch (final Exception e) {
                 log.error("sendHeartbeatToAllBroker exception", e);

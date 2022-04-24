@@ -1207,8 +1207,9 @@ public class DefaultMessageStore implements MessageStore {
          * offsetPy ： 待拉取的消息偏移量
          * maxOffsetPy ： 当前commitlog文件最大的偏移量
          * MessageStoreConfig accessMessageInMemoryMaxRatio
-         * 消息存储在物理内存中占用的最大比例，memory = 物理内存 * 这个比例，
+         * 消息存储在物理内存中占用的最大比例，memory = 物理内存 * 这个比例（默认为40%），
          * 如果 maxOffsetPy-offsetPy > memory 的话，说明 offsetPy 这个偏移量的消息已经从内存中置换到磁盘中了。
+         *
          */
         long memory = (long) (StoreUtil.TOTAL_PHYSICAL_MEMORY_SIZE * (this.messageStoreConfig.getAccessMessageInMemoryMaxRatio() / 100.0));
         return (maxOffsetPy - offsetPy) > memory;
@@ -1222,30 +1223,44 @@ public class DefaultMessageStore implements MessageStore {
          * bufferTotal : 已拉取消息字节总长度，不包含当前消息
          * messageTotal ： 已拉取消息总条数
          * sInDisk ：当前消息是否存在于磁盘中
-         *
-         *
          */
+
+        //如果 bufferTotal 和messageTotal 都等于0，显然本次拉取任务才刚开始，本批拉取任务未完成，返回 false。
         if (0 == bufferTotal || 0 == messageTotal) {
             return false;
         }
-
+        //如果maxMsgNums <= messageTotal,返回true,表示已拉取完毕。
         if (maxMsgNums <= messageTotal) {
             return true;
         }
 
         if (isInDisk) {
+            /**
+             * 如果已拉取消息字节数 + 待拉取消息的长度 > maxTransferBytesOnMessageInDisk
+             * (MessageStoreConfig)，默认64K，则不继续拉取该消息，返回拉取任务结束。
+             */
             if ((bufferTotal + sizePy) > this.messageStoreConfig.getMaxTransferBytesOnMessageInDisk()) {
                 return true;
             }
-
+            /**
+             * 如果已拉取消息条数 > maxTransferCountOnMessageInDisk (MessageStoreConfig)默认为8，
+             * 也就是，如果消息存在于磁盘中，一次拉取任务最多拉取8条
+             */
             if (messageTotal > this.messageStoreConfig.getMaxTransferCountOnMessageInDisk() - 1) {
                 return true;
             }
         } else {
+            /**
+             * 如果已拉取消息字节数 + 待拉取消息的长度 > maxTransferBytesOnMessageInMemory
+             * (MessageStoreConfig)，默认256K，则不继续拉取该消息，返回拉取任务结束。
+             */
             if ((bufferTotal + sizePy) > this.messageStoreConfig.getMaxTransferBytesOnMessageInMemory()) {
                 return true;
             }
-
+            /**
+             * 如果已拉取消息条数 > maxTransferCountOnMessageInMemory (MessageStoreConfig)默认为32，
+             * 也就是，如果消息存在于磁盘中，一次拉取任务最多拉取8条
+             */
             if (messageTotal > this.messageStoreConfig.getMaxTransferCountOnMessageInMemory() - 1) {
                 return true;
             }

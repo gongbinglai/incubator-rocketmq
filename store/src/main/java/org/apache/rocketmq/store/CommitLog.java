@@ -560,7 +560,7 @@ public class CommitLog {
                 if (msg.getDelayTimeLevel() > this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel()) {
                     msg.setDelayTimeLevel(this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel());
                 }
-                //重新设置topic，SCHEDULE_TOPIC_XXXX
+                //重新设置topic，SCHEDULE_TOPIC_XXXX，topic就是SCHEDULE_TOPIC_XXXX这个
                 topic = ScheduleMessageService.SCHEDULE_TOPIC;
                 queueId = ScheduleMessageService.delayLevel2QueueId(msg.getDelayTimeLevel());
 

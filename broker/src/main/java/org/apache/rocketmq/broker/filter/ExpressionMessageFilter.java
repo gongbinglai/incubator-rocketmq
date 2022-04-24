@@ -77,7 +77,7 @@ public class ExpressionMessageFilter implements MessageFilter {
             if (subscriptionData.getSubString().equals(SubscriptionData.SUB_ALL)) {
                 return true;
             }
-
+            //直接使用contains包含判断处理，判断的是hashcode
             return subscriptionData.getCodeSet().contains(tagsCode.intValue());
         } else {
             // no expression or no bloom
@@ -124,6 +124,7 @@ public class ExpressionMessageFilter implements MessageFilter {
             return true;
         }
 
+        //如果模式为TAG,直接返回true，从这里可以说明 isMatchedByCommitLog 只为 ExpressionType.SQL92 服务
         if (ExpressionType.isTagType(subscriptionData.getExpressionType())) {
             return true;
         }

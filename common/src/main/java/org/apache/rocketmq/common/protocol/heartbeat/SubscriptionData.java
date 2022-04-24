@@ -28,12 +28,19 @@ import java.util.Set;
 
 public class SubscriptionData implements Comparable<SubscriptionData> {
     public final static String SUB_ALL = "*";
+
+    //classFilterMode 消息过滤模式，如果为 true, 表示使用上传过滤类来进行消息过滤，默认为使用tag来进行消息过滤
     private boolean classFilterMode = false;
     private String topic;
+    //消息订阅子模式字符串
     private String subString;
+    //tags set 支持订阅时订阅多个tag："TAG1 || TAG2 || TAG3"
     private Set<String> tagsSet = new HashSet<String>();
+    //订阅的tag 的hashcode集合
     private Set<Integer> codeSet = new HashSet<Integer>();
     private long subVersion = System.currentTimeMillis();
+
+    //tag过滤类型，分为 TAG 、SQL92     (a > 10 AND a < 100) OR (b IS NOT NULL AND b=TRUE)
     private String expressionType = ExpressionType.TAG;
 
     @JSONField(serialize = false)

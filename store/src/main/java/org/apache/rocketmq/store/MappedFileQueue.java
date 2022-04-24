@@ -485,7 +485,19 @@ public class MappedFileQueue {
                 } else {
                     /**
                      * 因为文件会存在删除的情况，所以需要通过(offset / this.mappedFileSize) - (firstMappedFile.getFileFromOffset() / this.mappedFileSize)
-                     * 来计算MappedFile的Index
+                     * 来计算MappedFile的Index，打个比方的话：如果mappedFileSize=10的话，offset对应的文件index如下：
+                     * offset   index
+                     * 0        0/10=0
+                     * 8        0/10=0
+                     * 12       12/10=1
+                     * 23       23/10=2
+                     * 53       53/10=5
+                     *
+                     * 如果此时index =0,1,2的文件已经被删除，那么此时firstMappedFile.getFileFromOffset=30
+                     *
+                     * 32   32/10-30/10 = 0
+                     * 53   53/10-30/10=2
+                     *
                      */
 
                     int index = (int) ((offset / this.mappedFileSize) - (firstMappedFile.getFileFromOffset() / this.mappedFileSize));

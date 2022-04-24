@@ -70,10 +70,13 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
         this.consumeRequestQueue = new LinkedBlockingQueue<Runnable>();
 
         this.consumeExecutor = new ThreadPoolExecutor(
+            //核心线程数
             this.defaultMQPushConsumer.getConsumeThreadMin(),
+            //最大线程数
             this.defaultMQPushConsumer.getConsumeThreadMax(),
             1000 * 60,
             TimeUnit.MILLISECONDS,
+            //阻塞队列
             this.consumeRequestQueue,
             new ThreadFactoryImpl("ConsumeMessageThread_"));
 

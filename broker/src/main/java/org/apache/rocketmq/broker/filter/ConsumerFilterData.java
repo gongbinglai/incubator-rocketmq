@@ -33,10 +33,16 @@ public class ConsumerFilterData {
 
     private String consumerGroup;
     private String topic;
+    //消息过滤表达式，例如SQL92表达式，或过滤类全路径名
     private String expression;
+    //表达式类型，可取值TAG、SQL92
     private String expressionType;
+    //编译后的表达式对象
     private transient Expression compiledExpression;
+
+    //对象创建时间
     private long bornTime;
+    //对象死亡时间
     private long deadTime = 0;
     private BloomFilterData bloomFilterData;
     private long clientVersion;
