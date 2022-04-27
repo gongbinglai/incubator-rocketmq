@@ -181,15 +181,19 @@ public abstract class RebalanceImpl {
             FindBrokerResult findBrokerResult = this.mQClientFactory.findBrokerAddressInSubscribe(brokerName, MixAll.MASTER_ID, true);
             if (findBrokerResult != null) {
                 LockBatchRequestBody requestBody = new LockBatchRequestBody();
+                //消费组
                 requestBody.setConsumerGroup(this.consumerGroup);
+                //clientId
                 requestBody.setClientId(this.mQClientFactory.getClientId());
                 requestBody.setMqSet(mqs);
 
                 try {
+                    //调用Broker LOCK_BATCH_MQ 锁定MessageQueue，然后返回锁定成功的MessageQueue
                     Set<MessageQueue> lockOKMQSet =
                         this.mQClientFactory.getMQClientAPIImpl().lockBatchMQ(findBrokerResult.getBrokerAddr(), requestBody, 1000);
 
                     for (MessageQueue mq : lockOKMQSet) {
+                        //锁定processQueue
                         ProcessQueue processQueue = this.processQueueTable.get(mq);
                         if (processQueue != null) {
                             if (!processQueue.isLocked()) {
@@ -376,7 +380,12 @@ public abstract class RebalanceImpl {
         List<PullRequest> pullRequestList = new ArrayList<PullRequest>();
         for (MessageQueue mq : mqSet) {
             if (!this.processQueueTable.containsKey(mq)) {
-                //顺序消息的话 并且锁定MessageQueue失败的话
+                /**
+                 * 顺序消息时，添加该消息队列的拉取任务之前，首先要先尝试锁定消费者(消费组+CID)，
+                 * 不同消费组的消费者可以同时锁定同一个消息消费队列，集群模式下同一个消费组内只能被一个消费者锁定，
+                 * 如果锁定成功，则添加到拉取任务中，
+                 * 如果锁定未成功，说明虽然发送了消息队列重新负载，但该消息队列还未被释放，本次负载周期不会进行消息拉取。
+                 */
                 if (isOrder && !this.lock(mq)) {
                     log.warn("doRebalance, {}, add a new mq failed, {}, because lock failed", consumerGroup, mq);
                     continue;

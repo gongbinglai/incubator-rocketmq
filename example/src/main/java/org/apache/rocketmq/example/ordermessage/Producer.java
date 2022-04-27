@@ -32,18 +32,24 @@ import org.apache.rocketmq.remoting.exception.RemotingException;
 public class Producer {
     public static void main(String[] args) throws UnsupportedEncodingException {
         try {
-            MQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
+            DefaultMQProducer producer = new DefaultMQProducer("orderProducerGroup");
+            producer.setNamesrvAddr("127.0.0.1:9876");
+            producer.setSendMsgTimeout(3000*1000);
             producer.start();
 
             String[] tags = new String[] {"TagA", "TagB", "TagC", "TagD", "TagE"};
-            for (int i = 0; i < 100; i++) {
-                int orderId = i % 10;
+
+            //顺序消息的消费
+            for (int i = 0; i < 3; i++) {
+                int orderId = i % 3;
                 Message msg =
-                    new Message("TopicTestjjj", tags[i % tags.length], "KEY" + i,
+                    new Message("TopicTestOrder", tags[i % tags.length], "KEY" + i,
                         ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET));
                 SendResult sendResult = producer.send(msg, new MessageQueueSelector() {
                     @Override
+                    //选择MessageQueue
                     public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
+                        //根据orderId%MessageQueueSize计算出要选择的MessageQueue
                         Integer id = (Integer) arg;
                         int index = id % mqs.size();
                         return mqs.get(index);

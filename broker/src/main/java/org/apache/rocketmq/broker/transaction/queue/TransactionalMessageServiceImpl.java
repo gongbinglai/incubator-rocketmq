@@ -132,9 +132,11 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
             log.debug("Check topic={}, queues={}", topic, msgQueues);
             for (MessageQueue messageQueue : msgQueues) {
                 long startTime = System.currentTimeMillis();
+                //获取对应的操作队列，其主题为：RMQ_SYS_TRANS_OP_HALF_TOPIC
                 MessageQueue opQueue = getOpQueue(messageQueue);
                 //查找consumer offset
                 long halfOffset = transactionalMessageBridge.fetchConsumeOffset(messageQueue);
+                //获取操作队列的offset
                 long opOffset = transactionalMessageBridge.fetchConsumeOffset(opQueue);
                 log.info("Before check, the queue={} msgOffset={} opOffset={}", messageQueue, halfOffset, opOffset);
 
@@ -159,9 +161,11 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
                         messageQueue, halfOffset, opOffset);
                     continue;
                 }
-                // single thread
+                // single thread  获取空消息的次数
                 int getMessageNullCount = 1;
+                //当前处理RMQ_SYS_TRANS_HALF_TOPIC#queueId的最新进度
                 long newOffset = halfOffset;
+                //当前处理消息的队列偏移量，其主题依然为RMQ_SYS_TRANS_HALF_TOPIC
                 long i = halfOffset;
                 while (true) {
                     if (System.currentTimeMillis() - startTime > MAX_PROCESS_TIME_LIMIT) {
@@ -437,6 +441,7 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
     private MessageQueue getOpQueue(MessageQueue messageQueue) {
         MessageQueue opQueue = opQueueMap.get(messageQueue);
         if (opQueue == null) {
+            //RMQ_SYS_TRANS_OP_HALF_TOPIC
             opQueue = new MessageQueue(TransactionalMessageUtil.buildOpTopic(), messageQueue.getBrokerName(),
                 messageQueue.getQueueId());
             opQueueMap.put(messageQueue, opQueue);

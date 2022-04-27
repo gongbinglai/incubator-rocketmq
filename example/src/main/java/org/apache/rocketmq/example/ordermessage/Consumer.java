@@ -25,6 +25,7 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 
 public class Consumer {
 
@@ -32,8 +33,10 @@ public class Consumer {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("please_rename_unique_group_name_3");
 
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-
-        consumer.subscribe("TopicTest", "TagA || TagC || TagD");
+        consumer.setNamesrvAddr("127.0.0.1:9876");
+        //消息模式：集群，广播
+        consumer.setMessageModel(MessageModel.CLUSTERING);
+        consumer.subscribe("TopicTestOrder", "*");
 
         consumer.registerMessageListener(new MessageListenerOrderly() {
             AtomicLong consumeTimes = new AtomicLong(0);
