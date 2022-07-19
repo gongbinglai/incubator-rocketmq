@@ -87,6 +87,7 @@ public class WaitNotifyObject {
             }
 
             try {
+                //等待100ms
                 this.wait(interval);
             } catch (InterruptedException e) {
                 log.error("Interrupted", e);

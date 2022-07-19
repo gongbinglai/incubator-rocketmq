@@ -887,9 +887,11 @@ public class DefaultMessageStore implements MessageStore {
             log.warn("message store has shutdown, so appendToPhyQueue is forbidden");
             return false;
         }
-
+        //将数据写到commitlog
         boolean result = this.commitLog.appendData(startOffset, data);
+
         if (result) {
+            //唤醒reputMessageService，构建consumeQueue,index
             this.reputMessageService.wakeup();
         } else {
             log.error("appendToPhyQueue failed " + startOffset + " " + data.length);

@@ -116,10 +116,13 @@ public class RebalanceLockManager {
 
     public Set<MessageQueue> tryLockBatch(final String group, final Set<MessageQueue> mqs,
         final String clientId) {
+        //锁定的MessageQueue
         Set<MessageQueue> lockedMqs = new HashSet<MessageQueue>(mqs.size());
+        //未锁定的MessageQueue
         Set<MessageQueue> notLockedMqs = new HashSet<MessageQueue>(mqs.size());
 
         for (MessageQueue mq : mqs) {
+            //判断是否已经锁定了
             if (this.isLocked(group, mq, clientId)) {
                 lockedMqs.add(mq);
             } else {
@@ -129,8 +132,10 @@ public class RebalanceLockManager {
 
         if (!notLockedMqs.isEmpty()) {
             try {
+                //加锁，这里的锁为ReentrantLock
                 this.lock.lockInterruptibly();
                 try {
+                    //按组进行分，所以不同消费组之间的消费者可以同时获取MessageQueue的锁
                     ConcurrentHashMap<MessageQueue, LockEntry> groupValue = this.mqLockTable.get(group);
                     if (null == groupValue) {
                         groupValue = new ConcurrentHashMap<>(32);
@@ -138,6 +143,7 @@ public class RebalanceLockManager {
                     }
 
                     for (MessageQueue mq : notLockedMqs) {
+                        //获取锁定对象
                         LockEntry lockEntry = groupValue.get(mq);
                         if (null == lockEntry) {
                             lockEntry = new LockEntry();

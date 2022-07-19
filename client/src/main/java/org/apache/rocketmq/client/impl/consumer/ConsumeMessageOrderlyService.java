@@ -424,7 +424,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
             synchronized (objLock) {
                 /**
                  * 1.广播模式的话不需要加锁，因为每个消费者都需要消费消息
-                 * 2.如果是集群模式的话，并且processQueue锁定成功的话，继续后续处理
+                 * 2.如果是集群模式的话，并且processQueue锁定成功的话，继续后续处理，processQueue是在RebalanceImpl.lockAll时进行的锁定
                  */
                 if (MessageModel.BROADCASTING.equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl.messageModel())
                     || (this.processQueue.isLocked() && !this.processQueue.isLockExpired())) {
@@ -435,7 +435,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                             break;
                         }
 
-                        //如果是集群模式，但是未锁定成功的话，延迟10ms处理
+                        //如果是集群模式，但是processQueue未锁定成功的话，延迟10ms处理
                         if (MessageModel.CLUSTERING.equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl.messageModel())
                             && !this.processQueue.isLocked()) {
                             log.warn("the message queue not locked, so consume later, {}", this.messageQueue);
@@ -460,6 +460,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                         final int consumeBatchSize =
                             ConsumeMessageOrderlyService.this.defaultMQPushConsumer.getConsumeMessageBatchMaxSize();
 
+                        //从processQueue消息处理队列中获取消息
                         List<MessageExt> msgs = this.processQueue.takeMessags(consumeBatchSize);
                         defaultMQPushConsumerImpl.resetRetryAndNamespace(msgs, defaultMQPushConsumer.getConsumerGroup());
                         if (!msgs.isEmpty()) {
@@ -485,6 +486,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                             ConsumeReturnType returnType = ConsumeReturnType.SUCCESS;
                             boolean hasException = false;
                             try {
+                                //在messageListener.consumeMessage真正消费消息的时候，又进行了加锁，保证只有一个线程可以处理消息
                                 this.processQueue.getLockConsume().lock();
                                 if (this.processQueue.isDropped()) {
                                     log.warn("consumeMessage, the message queue not be able to consume, because it's dropped. {}",
@@ -501,6 +503,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                                     messageQueue);
                                 hasException = true;
                             } finally {
+                                //释放锁
                                 this.processQueue.getLockConsume().unlock();
                             }
 

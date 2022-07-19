@@ -853,7 +853,9 @@ public class BrokerController {
         }
 
         if (!messageStoreConfig.isEnableDLegerCommitLog()) {
+            //如果角色是主的话，启动transactionalMessageCheckService线程
             startProcessorByHa(messageStoreConfig.getBrokerRole());
+            //如果角色是从的话，slaveSynchronize.syncAll()，每10s同步一次元数据
             handleSlaveSynchronize(messageStoreConfig.getBrokerRole());
         }
 
@@ -1113,6 +1115,7 @@ public class BrokerController {
                 @Override
                 public void run() {
                     try {
+                        //10s 进行一次主从同步
                         BrokerController.this.slaveSynchronize.syncAll();
                     }
                     catch (Throwable e) {

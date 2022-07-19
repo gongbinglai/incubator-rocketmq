@@ -653,6 +653,7 @@ public class CommitLog {
         //同步消息到从
         handleHA(result, putMessageResult, msg);
 
+        //如果是同步复制的话，同步复制完成后才会返回putMessageResult
         return putMessageResult;
     }
 
@@ -684,16 +685,39 @@ public class CommitLog {
     }
 
     public void handleHA(AppendMessageResult result, PutMessageResult putMessageResult, MessageExt messageExt) {
+
+        //如果是broker主，并且是同步复制的话
         if (BrokerRole.SYNC_MASTER == this.defaultMessageStore.getMessageStoreConfig().getBrokerRole()) {
+            //获取HAService
             HAService service = this.defaultMessageStore.getHaService();
+            //获取Message上的MessageConst.PROPERTY_WAIT_STORE_MSG_OK，默认是需要等待主从复制完成
             if (messageExt.isWaitStoreMsgOK()) {
-                // Determine whether to wait
+                /**
+                 * 判断从是否可用，判断的逻辑是：（主offset-push2SlaveMaxOffset<1024 * 1024 * 256），也就是如果主从的offset差的太多，
+                 * 则认为从不可用， Tell the producer, slave not available
+                 * 这里的result = mappedFile.appendMessage(msg, this.appendMessageCallback);
+                 */
                 if (service.isSlaveOK(result.getWroteOffset() + result.getWroteBytes())) {
+                    //组装GroupCommitRequest，nextOffset=result.getWroteOffset() + result.getWroteBytes()，这里的nextOffset指的就是从要写到的offset
                     GroupCommitRequest request = new GroupCommitRequest(result.getWroteOffset() + result.getWroteBytes());
+                    /**
+                     * 调用的是this.groupTransferService.putRequest(request);将request放到requestsWrite list中。
+                     * HAService持有GroupTransferService groupTransferService引用;
+                     */
                     service.putRequest(request);
+                    /**
+                     * 唤醒的是WriteSocketService，查询commitLog数据，然后发送到从。
+                     * 在WriteSocketService获取commitLog时，如果没有获取到commitLog数据，等待100ms
+                     * HAConnection.this.haService.getWaitNotifyObject().allWaitForRunning(100);
+                     * 所以当commitLog新写入数据的时候，会唤醒WriteSocketService，然后查询commitLog数据，发送到从。
+                     */
                     service.getWaitNotifyObject().wakeupAll();
+
+                    //等待同步复制完成，判断逻辑是： HAService.this.push2SlaveMaxOffset.get() >= req.getNextOffset();
                     boolean flushOK =
                         request.waitForFlush(this.defaultMessageStore.getMessageStoreConfig().getSyncFlushTimeout());
+
+                    //如果同步复制失败的话，设置putMessageResult中的状态为同步从超时
                     if (!flushOK) {
                         log.error("do sync transfer other node, wait return, but failed, topic: " + messageExt.getTopic() + " tags: "
                             + messageExt.getTags() + " client address: " + messageExt.getBornHostNameString());
@@ -1069,6 +1093,7 @@ public class CommitLog {
 
         public boolean waitForFlush(long timeout) {
             try {
+                //等待同步复制完成
                 this.countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
                 return this.flushOK;
             } catch (InterruptedException e) {
